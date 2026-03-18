@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini QUIC Generator</title>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <h2>Mini QUIC Generator</h2>
+    <form onsubmit="event.preventDefault(); generate();">
+        <input type="text" id="sni" value="w3.org" size="32" autofocus />
+        <input type="submit" value="Generate" />
+    </form>
+    <p>AmneziaWG (I1 = ):</p>
+    <textarea id="outputAmnezia" style="width: 95%" rows="6" disabled></textarea>
+    <p>Uncut hex:</p>
+    <textarea id="outputRaw" style="width: 95%" rows="6" disabled></textarea>
+</body>
+
+</html>
