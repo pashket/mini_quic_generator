@@ -204,6 +204,11 @@ function quicMeasureLengths(dcidLength, scidLength, tokenLength, pknLength, payl
         }
         overallLength = getOverallLength();
     }
+    // extra safety (tail starting from pkn must be at least 20 bytes hor hp key derivation)
+    if (pknLength + payloadLength + paddingLength + tagLength < 20) {
+        paddingLength = 20 - pknLength - payloadLength - tagLength;
+        overallLength = getOverallLength();
+    }
     const headerLength = baseHeaderLength + getLengthByteSize();
 
     return {
