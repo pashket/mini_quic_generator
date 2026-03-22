@@ -11,7 +11,7 @@
 <body onload="generate()">
     <h2>Mini QUIC Generator</h2>
     <form onsubmit="event.preventDefault(); generate(true);" oninput="updatesni()">
-        <input type="text" id="sni" title="SNI domain" value="" placeholder="w3.org" size="16" autofocus autocapitalize="off" />
+        <input type="text" id="sni" title="SNI domain" value="" placeholder="w3.org" size="16" maxlength="255" autofocus autocapitalize="off" />
         <select id="level" title="Optimization level" onchange="generate(true)">
             <option value="0">Unoptimized (old)</option>
             <option value="1">Safe Reorder</option>
