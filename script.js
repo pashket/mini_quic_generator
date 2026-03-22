@@ -39,7 +39,7 @@ function quicVarint(x) {
         result[0] = result[0] | 0x40;
     } else if (x < 0x40000000) {
         result = new Uint8Array(4);
-        new DataView(result).buffer.setUint32(0, x, false);
+        new DataView(result.buffer).setUint32(0, x, false);
         result[0] = result[0] | 0x80;
     } else {
         result = new Uint8Array(8);
