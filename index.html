@@ -5,14 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini QUIC Generator</title>
-    <script src="script.js?3"></script>
+    <script src="script.js?4"></script>
 </head>
 
 <body onload="generate()">
     <h2>Mini QUIC Generator</h2>
     <form onsubmit="event.preventDefault(); generate(true);" oninput="updatesni()">
-        <input type="text" id="sni" value="" placeholder="w3.org" size="32" autofocus autocapitalize="off" />
-        <input type="submit" value="Generate" />
+        <input type="text" id="sni" title="SNI domain" value="" placeholder="w3.org" size="16" autofocus autocapitalize="off" />
+        <select id="level" title="Optimization level" onchange="generate(true)">
+            <option value="0">Unoptimized (old)</option>
+            <option value="1">Safe Reorder</option>
+            <option value="2">+ Screw TLS Header</option>
+            <option value="3">++ Cut Screwed</option>
+            <option value="4" selected>+++ Cut Zeroes</option>
+        </select>
+        <input type="submit" title="Generate" value="🎲" />
     </form>
     <p>AmneziaWG 1.5+ (I1 = ):</p>
     <textarea id="outputAmnezia" style="width: 95%" rows="6" disabled></textarea>

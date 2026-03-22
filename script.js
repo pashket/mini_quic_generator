@@ -317,38 +317,100 @@ function quicTlsClientHelloSniOnly(sni, predefinedRandom = null) {
     return payload;
 }
 
-function zebra(buffer, parts, includeFirst = true) {
+/**
+ * @param {ArrayBuffer} clientHello 
+ * @param {number} level 
+ * @returns {[ArrayBuffer, number[]]}
+ */
+function quicTlsClientHelloToFrames(clientHello, level = 0) {
+    let payload;
+    let cutSettings;
+    if (!level) {
+        // legacy cut (no reorder, cut in the middle)
+        payload = quicCryptoFrame(clientHello);
+        dataOffset = payload.byteLength - clientHello.byteLength;
+        cutSettings = [dataOffset + 6, 32, clientHello.byteLength - 38, 16];
+    } else {
+        const cutPresets = {
+            1: [38, Infinity, 0, 38, 32, false],
+            2: [38, Infinity, 0, 38, 37, false],
+            3: [0, 1, 38, Infinity, 0, false],
+            4: [0, 1, 38, Infinity, 0, true],
+        }
+        let [p1s, p1e, p2s, p2e, dropTail, skipZeroes] = cutPresets[level];
+        if (skipZeroes) {
+            const h8u = new Uint8Array(clientHello);
+            while (h8u[p2s] === 0) p2s++;
+        }
+        payload = quicConcatBuffers([
+            quicCryptoFrame(clientHello.slice(p1s, p1e), p1s),
+            quicCryptoFrame(clientHello.slice(p2s, p2e), p2s),
+        ]);
+        cutSettings = [payload.byteLength - dropTail, 16 + dropTail];
+    }
+    return [payload, cutSettings];
+}
+
+/**
+ * @param {number[]} cutSettings 
+ * @param {number} packetLength 
+ * @param {number} pknLength 
+ * @param {number} payloadLength 
+ */
+function quicFixCutSettings(cutSettings, packetLength, pknLength, payloadLength) {
+    // fix first chunk if too short for header protection
+    if (cutSettings[0] < 20 - pknLength) {
+        const toAdd = 20 - pknLength - cutSettings[0];
+        cutSettings[0] += toAdd;
+        cutSettings[1] -= toAdd;
+    }
+    // include header to first chunk (!fragile code, assumes padto is zero)
+    cutSettings[0] += packetLength - payloadLength - 16;
+}
+
+/**
+ * @param {ArrayBuffer} buffer
+ * @param {number[]} parts 
+ * @param {boolean} includeFirst 
+ */
+function quicToAWG(buffer, parts = null, includeFirst = true) {
     let include = includeFirst;
     let offset = 0;
     let result = '';
+    if (!parts) return `<b 0x${quicToHex(buffer)}>`;
     for (let part of parts) {
-        if (include) {
-            result += `<b 0x${quicToHex(buffer.slice(offset, offset + part))}>`;
-        } else {
-            result += `<r ${part}>`;
+        if (part > 0) {
+            if (include) {
+                result += `<b 0x${quicToHex(buffer.slice(offset, offset + part))}>`;
+            } else {
+                result += `<r ${part}>`;
+            }
+            offset += part;
         }
-        offset += part;
         include = !include;
     }
     return result;
 }
 
 let lastSni = null;
+let lastLevel = null;
 async function generate(force = false) {
     const sniInput = document.getElementById('sni');
     const sni = sniInput.value || sniInput.placeholder;
-    if (!force && sni === lastSni) return;
+    const level = parseInt(document.getElementById('level').value);
+    if (!force && sni === lastSni && level === lastLevel) return;
     lastSni = sni;
+    lastLevel = level;
     const dcid = new Uint8Array(1);
     window.crypto.getRandomValues(dcid);
     const scid = new Uint8Array(0);
     const token = new Uint8Array(0);
     const pkn = new Uint8Array([0]);
     const clientHello = quicTlsClientHelloSniOnly(sni);
-    const payload = quicCryptoFrame(clientHello);
+    const [payload, cutSettings] = quicTlsClientHelloToFrames(clientHello, level);
     const packet = await quicInitial(dcid, scid, token, pkn, payload, 0);
-    const i1 = zebra(packet, [31, 22, packet.byteLength - 69, 16]);
-    document.getElementById('outputAmnezia').value = i1;
+    quicFixCutSettings(cutSettings, packet.byteLength, pkn.byteLength, payload.byteLength);
+    document.getElementById('outputAmnezia').value = quicToAWG(packet, cutSettings);
     document.getElementById('outputRaw').value = quicToHex(packet);
     document.getElementById('outputSni').innerText = sni;
 }
