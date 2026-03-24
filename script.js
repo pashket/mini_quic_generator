@@ -422,3 +422,14 @@ function updatesni() {
         generate();
     }, 16);
 }
+
+async function copy(event) {
+    const target = event.target;
+    const textbox = document.getElementById(target.dataset['for']);
+    await navigator.clipboard.writeText(textbox.value);
+    target.innerText = '🡣 Copied!';
+    textbox.style.color = '#00cc00';
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    target.innerText = '🡣 Copy';
+    textbox.style.color = '';
+}

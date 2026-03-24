@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini QUIC Generator</title>
-    <script src="script.js?4"></script>
+    <script src="script.js?5"></script>
 </head>
 
 <body onload="generate()">
@@ -21,9 +21,15 @@
         </select>
         <input type="submit" title="Generate" value="🎲" />
     </form>
-    <p>AmneziaWG 1.5+ (I1 = ):</p>
+    <p>
+        <button onclick="copy(event)" data-for="outputAmnezia">🡣 Copy</button>
+        AmneziaWG 1.5+ (I1 = ):
+    </p>
     <textarea id="outputAmnezia" style="width: 95%" rows="6" disabled></textarea>
-    <p>Uncut hex:</p>
+    <p>
+        <button onclick="copy(event)" data-for="outputRaw">🡣 Copy</button>
+        Uncut hex:
+    </p>
     <textarea id="outputRaw" style="width: 95%" rows="6" disabled></textarea>
     <p>Generated with SNI: <b id="outputSni">(please wait)</b></p>
 </body>
